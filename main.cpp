@@ -3,6 +3,10 @@
 #include <string.h>
 #include <string_view>
 #include <string>
+#include <vector>
+#include <unordered_map>
+
+#define ArrayCount(a) (int)(sizeof(a) / sizeof(a[0]))
 
 char* read_entirefile(const char *filename) {
     FILE *file = fopen(filename, "r");
@@ -21,7 +25,14 @@ char* read_entirefile(const char *filename) {
     return NULL;
 }
 
+
+
 enum TokenType {
+    Token_Float,
+    Token_Int,
+    Token_Return,
+    Token_Double,
+    Token_Variable,
     Token_Identifier,
     Token_Colon,
     Token_OpenParenthesis,
@@ -31,7 +42,6 @@ enum TokenType {
     Token_SemiColon,
     Token_String,
     Token_Comma,
-    Token_Asterik,
     Token_Number,
 
     Token_Add,
@@ -44,8 +54,17 @@ enum TokenType {
     Token_Unknown
 };
 
+const std::string_view keywords[] = {
+    "float", "int", "return", "double", "variable"
+};
+
 
 const char * TokenTypeStrings[] = {
+    "Token_Float",
+    "Token_Int",
+    "Token_Double",
+    "Token_Return",
+    "Token_Variable",
     "Token_Identifier",
     "Token_Colon",
     "Token_OpenParenthesis",
@@ -91,6 +110,14 @@ struct Token {
 struct Tokenizer {
     char *text;
     Token token;
+};
+
+
+// stores relevant info about functions
+struct ParseStruct {
+    std::string_view parameter;
+    std::string_view funcion_name;
+    std::vector <std::string_view> function_parameters;
 };
 
 bool is_whitespace(char c) {
@@ -156,7 +183,7 @@ Token tokenize(Tokenizer *t) {
         case '(' :
             token.token_type = Token_OpenParenthesis;
             t->text++;
-            token.id = "(";
+            // token.id = "(";
             break;
         case ')' :
             token.token_type = Token_CloseParenthesis;
@@ -174,8 +201,14 @@ Token tokenize(Tokenizer *t) {
             token.id = "}";
             break;
         
-        case ';' :
+        case ':':
             token.token_type = Token_Colon;
+            t->text++;
+            token.id = ":";
+            break;
+        
+        case ';' :
+            token.token_type = Token_SemiColon;
             t->text++;
             token.id = ";";
             break;
@@ -205,7 +238,7 @@ Token tokenize(Tokenizer *t) {
             break;
 
         case '*' :
-            token.token_type = Token_Asterik;
+            token.token_type = Token_Multiply;
             t->text++;
             token.id = "*";
             break;
@@ -243,6 +276,12 @@ Token tokenize(Tokenizer *t) {
                 token.id = std::string_view(start, end - start);
                 token.length = end - start;
                 token.token_type = Token_Identifier;
+                const size_t size = ArrayCount(keywords);
+                for(int i = 0; i < size; i++) {
+                    if (is_equal_case_insensitive(token.id, keywords[i])) {
+                        token.token_type = (TokenType) i;
+                    }
+                }
             } else if(is_num(t->text[0])){
                 token.token_type = Token_Number;
                 const char *start = t->text;
@@ -271,11 +310,8 @@ Token tokenize(Tokenizer *t) {
 }
 
 //parsers
-bool accept_token(Tokenizer *t, TokenType kind, TokenType *out = NULL){
-    if (t->token.token_type = kind) {
-        if(out) {
-            *out = kind;
-        }
+bool accept_token(Tokenizer *t, TokenType kind){
+    if (t->token.token_type == kind) {
         tokenize(t);
         return true;
     }
@@ -284,40 +320,111 @@ bool accept_token(Tokenizer *t, TokenType kind, TokenType *out = NULL){
 
 
 bool require_token(Tokenizer *t, TokenType kind){
-    Token token = tokenize(t);
-    return token.token_type == kind;
+    bool result = t->token.token_type == kind;
+    tokenize(t);
+    return result;
 }
 
 
 
-bool parse_introspection_parameters(Tokenizer *t) {
-    if (require_token(t, Token_OpenParenthesis)) {
-        if (require_token(t, Token_Identifier)) {
-
+bool parse_introspection_parameters(Tokenizer *t, ParseStruct *parser) {
+    if (require_token(t, Token_Variable)) {
+        if(!require_token(t, Token_Colon)) {
+            //TODO:Error checking
+            return false;
         }
+        Token token = t->token;
         if (require_token(t, Token_String)) {
-
+            parser->parameter = token.id;
+        } else {
+            return false;
         }
 
-        if (require_token(t, Token_CloseParenthesis)) {
+        if (!require_token(t, Token_CloseParenthesis)) {
+            //TODO:Error checking
+            return false;
+        }
+
+    }
+
+    return true;
+}
+
+
+bool parse_function_parameter(Tokenizer *t, ParseStruct *parser) {
+    if (!accept_token(t, Token_Float)) {
+        if (!require_token(t, Token_Double)) {
+            return false;
+        }
+    }
+    Token token = t->token;
+    if (require_token(t, Token_Identifier)) {
+        parser->function_parameters.push_back(token.id);
+        return true;
+    }
+
+    return false;
+}
+
+
+bool parse_statement(Tokenizer *t, ParseStruct *parser) {
+    if (require_token(t, Token_Return)) {
+        // parse mathematical expression
+    }
+
+    return false;
+}
+
+
+bool parse_function(Tokenizer *t, ParseStruct *parser) {
+    //FIXME: proper checking and maybe store types too
+    accept_token(t, Token_Double);
+    accept_token(t, Token_Float);
+    Token token = t->token;
+    if(require_token(t, Token_Identifier)) {
+        parser->funcion_name = token.id;
+    }
+    
+    // consume open parenthesis
+    tokenize(t);
+
+    // parse function parameters
+    bool function_parameter_remaining = true;
+    while (function_parameter_remaining) {
+        parse_function_parameter(t, parser);
+
+        // if next token is Token_ClosseParenthesis then there are no more function parameters
+        if (accept_token(t, Token_CloseParenthesis)) {
+            function_parameter_remaining = false;
+        } else if (require_token(t, Token_Comma)) {
 
         }
-    } else {
+    }
+
+    if (!require_token(t, Token_OpenBrace)) {
+        //TODO: insert error checkint
+        return false;
+    }
+
+    bool statements_remaining = true;
+
+    while (parse_statement(t, parser)) {
+        
+    }
+
+
+    if (!require_token(t, Token_CloseBrace)) {
+        //TODO: insert error checking here
         return false;
     }
 }
 
 
-bool parse_function(Tokenizer *t) {
-    
-}
-
-
-bool parse_introspection(Tokenizer *t) {
+bool parse_introspection(Tokenizer *t, ParseStruct *parser) {
     if(require_token(t, Token_OpenParenthesis)) {
-        parse_introspection_parameters(t);
+        parse_introspection_parameters(t, parser);
 
-        parse_function(t);
+        parse_function(t, parser);
     }
 
     return true;
@@ -342,16 +449,17 @@ int main() {
                 case Token_Identifier:
                 {
                     if (token == "derivative") {
-                        // parse_introspection(&t);
+                        ParseStruct parser;
+                        tokenize(&t);
+                        parse_introspection(&t, &parser);
                     }
-                    break;
                 }
                 case Token_Unknown:
                     continue;
                     break;
 
             }
-            printf("{\"%s\", %.*s } \n", TokenTypeStrings[token.token_type], token.id.length(), token.id.data());
+            // printf("{\"%s\", %.*s } \n", TokenTypeStrings[token.token_type], token.id.length(), token.id.data());
         }
     }
 }
