@@ -368,8 +368,36 @@ bool parse_function_parameter(Tokenizer *t, ParseStruct *parser) {
 
 
 bool parse_statement(Tokenizer *t, ParseStruct *parser) {
+    Token token;
     if (require_token(t, Token_Return)) {
-        // parse mathematical expression
+        // TODO: parse mathematical expression
+        token = t->token;
+        if (!require_token(t, Token_Identifier)) {
+            //TODO: Error Handling
+
+            return false;
+        }
+
+        bool is_remaining_expression  = true;
+
+        while(is_remaining_expression) {
+            token = t->token;
+            if (!accept_token(t, Token_Add) && !accept_token(t, Token_Subtract) && !accept_token(t, Token_Multiply) && !accept_token(t, Token_Divide)) {
+                return false;
+            }
+
+            token = t->token;
+            if (!require_token(t, Token_Identifier)) {
+                return false;
+            }
+
+            if (accept_token(t, Token_SemiColon)) {
+                is_remaining_expression = false;
+                return true;
+            }
+        }
+
+        
     }
 
     return false;
