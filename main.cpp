@@ -17,7 +17,7 @@ char* read_entirefile(const char *filename) {
         char *file_content = (char *)malloc(file_size + 2);
         fread(file_content, file_size, 1, file);
         file_content[file_size] = '\0';
-
+        fclose(file);
         return file_content;
     }
 
@@ -25,11 +25,43 @@ char* read_entirefile(const char *filename) {
 }
 
 
+//TODO: Calculate derivative(maybe recursively)
+std::string_view calculate_derivative(ExpressionTree *tree) {
+
+}
 
 
+void write_derivative(const char *filename, const ParseStruct& parse_tree) {
+    FILE *file = fopen(filename, "a");
+    if (file) {
+        fprintf(
+            file,
+            "\nfloat _deriv_%.*s (", parse_tree.funcion_name.length(), parse_tree.funcion_name.data()
+        );
+
+
+        // add funtion parameter to function method
+        const int size_function_parameter = parse_tree.function_parameters.size();
+        for(int i = 0; i < size_function_parameter; i++) {
+            const std::string_view &parameter = parse_tree.function_parameters[i];
+            fprintf(file, "float %.*s", parameter.length(), parameter.data());
+
+            if (i != size_function_parameter - 1) {
+                fprintf(file, ", ");
+            } else {
+                fprintf(file, ") {\n");
+            }
+        }
+
+        fprintf(file, "\n}");
+
+        fclose(file);
+    }
+}
 
 int main() {    
-    char *content = read_entirefile("test.c");
+    const char *filename = "test.c";
+    char *content = read_entirefile(filename);
 
     if(content != NULL){
         Token token;
@@ -49,6 +81,8 @@ int main() {
                         ParseStruct parser;
                         tokenize(&t);
                         parse_introspection(&t, &parser);
+
+                        write_derivative(filename, parser);
                     }
                 }
                 case Token_Unknown:
