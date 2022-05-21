@@ -1,5 +1,5 @@
 CC=g++
-SourceFiles="../main.cpp"
+SourceFiles="../main.cpp ../expr_tree.cpp ../parser.cpp"
 CompilerFlags="-g"
 Output="SD"
 
