@@ -166,19 +166,11 @@ Token tokenize(Tokenizer *t) {
             } else if(is_num(t->text[0])){
                 token.token_type = Token_Number;
                 const char *start = t->text;
-                while(is_num(t->text[0])){
+                while(is_num(t->text[0]) || t->text[0] == '.'){
                     t->text++;
                 }
 
-                // t->value = strtoull(start, (char **)&t->ptr, 10);
-
-                // if (errno == ERANGE) {
-                //     t->kind = TOKEN_ERROR;
-                //     token.id = "Number is out of range";
-                // }
-
-                // t->ptr = ptr;
-                // 
+                token.id = std::string_view(start, t->text - start);
             } else  {
                 token.token_type = Token_Unknown;
                 t->text++;
@@ -253,7 +245,7 @@ bool parse_statement(Tokenizer *t, ParseStruct *parser) {
     if (require_token(t, Token_Return)) {
         // TODO: parse mathematical expression
         token = t->token;
-        if (!require_token(t, Token_Identifier)) {
+        if (!accept_token(t, Token_Identifier) && !accept_token(t, Token_Number)) {
             
         }
         parser->expr_tree = insert_expr(parser->expr_tree, token);
@@ -268,7 +260,7 @@ bool parse_statement(Tokenizer *t, ParseStruct *parser) {
             parser->expr_tree = insert_expr(parser->expr_tree, token);
 
             token = t->token;
-            if (!require_token(t, Token_Identifier)) {
+            if (!accept_token(t, Token_Identifier) && !accept_token(t, Token_Number)) {
                 return false;
             }
             parser->expr_tree = insert_expr(parser->expr_tree, token);

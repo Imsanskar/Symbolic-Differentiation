@@ -25,11 +25,15 @@ char* read_entirefile(const char *filename) {
 }
 
 
-//TODO: Calculate derivative(maybe recursively)
 ExpressionTree* calculate_derivative(ExpressionTree *tree, ExpressionTree *derivative_tree, const std::string_view& variable) {
     const TokenType type = tree->type;
     if (!derivative_tree) {
         derivative_tree = new ExpressionTree;
+    }
+
+    if (tree->type == Token_Number) {
+        derivative_tree->id = "0";
+        derivative_tree->type = Token_Number;
     }
 
     if (tree->type == Token_Identifier) {

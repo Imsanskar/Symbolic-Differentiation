@@ -98,6 +98,23 @@ ExpressionTree* insert_expr(ExpressionTree *tree, Token token) {
 
     }
 
+    if (token.token_type == Token_Number) {
+        if(!tree) {
+            tree = new ExpressionTree;
+            tree->left = new ExpressionTree;
+            tree->left->id = token.id;
+            tree->left->type = token.token_type;
+
+            return tree;
+        }else if (tree && !tree->right && tree->left) {
+            tree->right = new ExpressionTree;
+            tree->right->id = token.id;
+            tree->right->type = token.token_type;
+
+            return tree;
+        }
+    }
+
 
     if (token.token_type != Token_Identifier) {
         if (tree->left && !tree->right){
