@@ -39,7 +39,7 @@ ExpressionTree* calculate_derivative(ExpressionTree *tree, ExpressionTree *deriv
             derivative_tree->id = "0";
         }
 
-        derivative_tree->type = Token_Identifier;
+        derivative_tree->type = Token_Number;
     } else if (type == Token_Multiply) {
         derivative_tree->type = Token_Add;
 
@@ -64,6 +64,31 @@ ExpressionTree* calculate_derivative(ExpressionTree *tree, ExpressionTree *deriv
         derivative_tree->type = Token_Subtract;
         derivative_tree->left = calculate_derivative(tree->left, derivative_tree->left, variable);
         derivative_tree->right = calculate_derivative(tree->right, derivative_tree->right, variable);
+    } else if (type == Token_Divide) {
+        derivative_tree->type = Token_Divide;
+        
+        if (!derivative_tree->right) {
+            // numerator
+            derivative_tree->left = new ExpressionTree;
+            derivative_tree->left->type = Token_Subtract;
+            derivative_tree->left->left = new ExpressionTree;
+            derivative_tree->left->right = new ExpressionTree;
+
+            derivative_tree->left->left->type = Token_Multiply;
+            derivative_tree->left->left->left = tree->right;
+            derivative_tree->left->left->right = calculate_derivative(tree->left, derivative_tree->left->left->right, variable);
+
+            derivative_tree->left->right->type = Token_Multiply;
+            derivative_tree->left->right->left = tree->left;
+            derivative_tree->left->right->right = calculate_derivative(tree->right, derivative_tree->left->right->right, variable);
+
+            // denominator management
+            derivative_tree->right = new ExpressionTree;
+            derivative_tree->right->type = Token_Multiply;
+            derivative_tree->right->left = tree->right;
+            derivative_tree->right->right = tree->right;
+
+        }
     }
 
     return derivative_tree;
@@ -98,6 +123,8 @@ void write_derivative(const char *filename, const ParseStruct& parse_tree) {
         printf("\n\n");
         print_inorder(derivative_tree);
 
+        std::string_view derivative_expr_string = expressiontree_to_string(derivative_tree);
+        fprintf(file, "\treturn %.*s;", derivative_expr_string.length(), derivative_expr_string.data());
         fprintf(file, "\n}");
 
         fclose(file);

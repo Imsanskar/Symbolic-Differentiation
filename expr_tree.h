@@ -14,3 +14,6 @@ struct ExpressionTree {
 ExpressionTree* insert_expr(ExpressionTree *tree, Token token);
 
 void print_inorder(ExpressionTree *node);
+
+
+std::string_view expressiontree_to_string(ExpressionTree *tree);
