@@ -321,7 +321,7 @@ bool parse_function(Tokenizer *t, ParseStruct *parser) {
         
     }
 
-    print_inorder(parser->expr_tree);
+
 
     if (!require_token(t, Token_CloseBrace)) {
         //TODO: insert error checking here

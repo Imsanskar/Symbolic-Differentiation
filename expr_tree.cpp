@@ -77,10 +77,12 @@ ExpressionTree* insert_expr(ExpressionTree *tree, Token token) {
 
             return new_tree;
         } else {
-            ExpressionTree *new_tree = new ExpressionTree;
-            new_tree->type = token.token_type;
-            new_tree->left = tree->right;
-            tree->right = new_tree;
+            if (priority(token.token_type) < priority(tree->type)) {
+                tree->left = tree;
+                tree->right = NULL;
+            } else {
+                tree->right = insert_expr(tree->right, token);
+            }
 
             return tree;
         }

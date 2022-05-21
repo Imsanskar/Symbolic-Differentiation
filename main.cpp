@@ -26,8 +26,47 @@ char* read_entirefile(const char *filename) {
 
 
 //TODO: Calculate derivative(maybe recursively)
-std::string_view calculate_derivative(ExpressionTree *tree) {
+ExpressionTree* calculate_derivative(ExpressionTree *tree, ExpressionTree *derivative_tree, const std::string_view& variable) {
+    const TokenType type = tree->type;
+    if (!derivative_tree) {
+        derivative_tree = new ExpressionTree;
+    }
 
+    if (tree->type == Token_Identifier) {
+        if (variable == tree->id) {
+            derivative_tree->id = "1";
+        } else {
+            derivative_tree->id = "0";
+        }
+
+        derivative_tree->type = Token_Identifier;
+    } else if (type == Token_Multiply) {
+        derivative_tree->type = Token_Add;
+
+        if(!derivative_tree->left) {
+            derivative_tree->left = new ExpressionTree;
+        }
+        derivative_tree->left->type = Token_Multiply;
+        derivative_tree->left->left = tree->right;
+        derivative_tree->left->right = calculate_derivative(tree->left, derivative_tree->left->right, variable);
+
+        if(!derivative_tree->right) {
+            derivative_tree->right = new ExpressionTree;
+        }
+        derivative_tree->right->type = Token_Multiply;
+        derivative_tree->right->left = tree->left;
+        derivative_tree->right->right = calculate_derivative(tree->right, derivative_tree->right->right, variable);
+    } else if (type == Token_Add) {
+        derivative_tree->type = Token_Add;
+        derivative_tree->left = calculate_derivative(tree->left, derivative_tree->left, variable);
+        derivative_tree->right = calculate_derivative(tree->right, derivative_tree->right, variable);
+    } else if (type == Token_Subtract) {
+        derivative_tree->type = Token_Subtract;
+        derivative_tree->left = calculate_derivative(tree->left, derivative_tree->left, variable);
+        derivative_tree->right = calculate_derivative(tree->right, derivative_tree->right, variable);
+    }
+
+    return derivative_tree;
 }
 
 
@@ -52,6 +91,12 @@ void write_derivative(const char *filename, const ParseStruct& parse_tree) {
                 fprintf(file, ") {\n");
             }
         }
+
+        ExpressionTree *derivative_tree = NULL;
+        derivative_tree = calculate_derivative(parse_tree.expr_tree, derivative_tree, parse_tree.function_parameters[0]);
+        print_inorder(parse_tree.expr_tree);
+        printf("\n\n");
+        print_inorder(derivative_tree);
 
         fprintf(file, "\n}");
 
