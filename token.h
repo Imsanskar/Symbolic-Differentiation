@@ -10,6 +10,11 @@ enum TokenType {
     Token_Double,
     Token_Return,
     Token_Variable,
+    Token_Sin,
+    Token_Cos,
+    Token_Tan,
+    Token_Pow,
+    Token_Exp,
     Token_Identifier,
     Token_Colon,
     Token_OpenParenthesis,
@@ -32,7 +37,7 @@ enum TokenType {
 };
 
 const std::string_view keywords[] = {
-    "float", "int", "double", "return", "variable"
+    "float", "int", "double", "return", "variable", "sin", "cos", "tan", "pow", "exp"
 };
 
 
@@ -42,6 +47,11 @@ static const char * TokenTypeStrings[] = {
     "Token_Double",
     "Token_Return",
     "Token_Variable",
+    "Token_Sin",
+    "Token_Cos",
+    "Token_Tan",
+    "Token_Pow",
+    "Token_Exp",
     "Token_Identifier",
     "Token_Colon",
     "Token_OpenParenthesis",

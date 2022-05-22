@@ -161,6 +161,7 @@ Token tokenize(Tokenizer *t) {
                 for(int i = 0; i < size; i++) {
                     if (is_equal_case_insensitive(token.id, keywords[i])) {
                         token.token_type = (TokenType) i;
+                        break;
                     }
                 }
             } else if(is_num(t->text[0])){
@@ -239,18 +240,59 @@ bool parse_function_parameter(Tokenizer *t, ParseStruct *parser) {
     return false;
 }
 
+bool parse_expression(Tokenizer *t, ExpressionTree **expr_tree) { 
+    Token token;
+    token = t->token;
+    if (accept_token(t, Token_Identifier) || accept_token(t, Token_Number)) {
+        *expr_tree = insert_expr(*expr_tree, token);
+        return true;   
+    }
+
+    token = t->token;
+    if (accept_token(t, Token_Sin) || accept_token(t, Token_Cos) || accept_token(t, Token_Tan) || accept_token(t, Token_Pow)) {
+        ExpressionTree *tree = new ExpressionTree;
+        tree->id = token.id;
+        tree->type = token.token_type; 
+        if (!require_token(t, Token_OpenParenthesis)) {
+            return false;
+        }
+
+        parse_expression(t, &tree);
+
+        bool is_remaining_expression = true;
+        while (is_remaining_expression) {
+            token = t->token;
+            if (accept_token(t, Token_Add) || accept_token(t, Token_Subtract) || accept_token(t, Token_Multiply) || accept_token(t, Token_Divide)) {
+                tree = insert_expr(tree, token);
+            }
+
+            parse_expression(t, &tree);
+
+            if (accept_token(t, Token_CloseParenthesis)) {
+                is_remaining_expression = false;
+            }
+        }
+        print_inorder(*expr_tree);
+        print_inorder(tree);
+        *expr_tree = insert_subtree(*expr_tree, tree);
+        print_inorder(*expr_tree);
+        return true;
+    }
+
+    return false;
+}
 
 bool parse_statement(Tokenizer *t, ParseStruct *parser) {
     Token token;
     if (require_token(t, Token_Return)) {
-        // TODO: parse mathematical expression
         token = t->token;
-        if (!accept_token(t, Token_Identifier) && !accept_token(t, Token_Number)) {
-            
-        }
-        parser->expr_tree = insert_expr(parser->expr_tree, token);
-        bool is_remaining_expression  = true;
+        parse_expression(t, &parser->expr_tree);
+        bool is_remaining_expression = t->token.token_type != Token_SemiColon;
 
+        if (!is_remaining_expression) {
+            accept_token(t, Token_SemiColon);
+            return true;
+        }
 
         while(is_remaining_expression) {
             token = t->token;
@@ -259,11 +301,7 @@ bool parse_statement(Tokenizer *t, ParseStruct *parser) {
             }
             parser->expr_tree = insert_expr(parser->expr_tree, token);
 
-            token = t->token;
-            if (!accept_token(t, Token_Identifier) && !accept_token(t, Token_Number)) {
-                return false;
-            }
-            parser->expr_tree = insert_expr(parser->expr_tree, token);
+            parse_expression(t, &parser->expr_tree);
 
             if (accept_token(t, Token_SemiColon)) {
                 is_remaining_expression = false;
@@ -271,8 +309,6 @@ bool parse_statement(Tokenizer *t, ParseStruct *parser) {
             }
         }
     }
-
-    return false;
 }
 
 
@@ -310,15 +346,12 @@ bool parse_function(Tokenizer *t, ParseStruct *parser) {
     bool statements_remaining = true;
 
     while (parse_statement(t, parser)) {
-        
+        if (accept_token(t, Token_CloseBrace)) {
+            statements_remaining = false;;
+        }   
     }
 
-
-
-    if (!require_token(t, Token_CloseBrace)) {
-        //TODO: insert error checking here
-        return false;
-    }
+    return true;
 }
 
 

@@ -93,6 +93,27 @@ ExpressionTree* calculate_derivative(ExpressionTree *tree, ExpressionTree *deriv
             derivative_tree->right->right = tree->right;
 
         }
+    } else if (type == Token_Sin) {
+        derivative_tree->type = Token_Multiply;
+        derivative_tree->left = new ExpressionTree;
+        derivative_tree->left->type = Token_Cos;
+        derivative_tree->left->left = tree->left;
+
+        derivative_tree->right = calculate_derivative(tree->left, derivative_tree->right, variable);
+    } else if (type == Token_Cos) {
+        derivative_tree->type = Token_Multiply;
+        derivative_tree->left = new ExpressionTree;
+        derivative_tree->left->type = Token_Sin;
+        derivative_tree->left->left = tree->left;
+
+        derivative_tree->right = calculate_derivative(tree->left, derivative_tree->right, variable);
+    } else if (type == Token_Exp) {
+        derivative_tree->type = Token_Multiply;
+        derivative_tree->left = new ExpressionTree;
+        derivative_tree->left->type = Token_Exp;
+        derivative_tree->left->left = tree->left;
+
+        derivative_tree->right = calculate_derivative(tree->left, derivative_tree->right, variable);
     }
 
     return derivative_tree;
