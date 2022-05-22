@@ -80,7 +80,7 @@ std::string_view expressiontree_to_string(ExpressionTree *tree) {
 
     if (is_function) {
         std::string_view left = expressiontree_to_string(tree->left);
-        char *result = (char *)malloc(left.length() + operator_type.length() + 4);
+        char *result = (char *)malloc(left.length() + operator_type.length() + 8);
         sprintf(result, "(%.*s (%.*s))", operator_type.length(), operator_type.data(), left.length(), left.data());
         return std::string_view(result);
     
@@ -165,11 +165,15 @@ ExpressionTree* insert_expr(ExpressionTree *tree, Token token) {
                 ExpressionTree temp_tree = *(tree->left);
                 if (!tree->left->left) {
                     tree->left->left = new ExpressionTree;
+                    tree->left->left->id = temp_tree.id;
+                    tree->left->left->type = temp_tree.type;
+                    tree->left->type = token.token_type;
+                    tree->left->id = token.id;
+                } else {
+                    tree->left = insert_expr(tree->left, token);
+
+                    return tree;
                 }
-                tree->left->left->id = temp_tree.id;
-                tree->left->left->type = temp_tree.type;
-                tree->left->type = token.token_type;
-                tree->left->id = token.id;
 
                 return tree;
             }
