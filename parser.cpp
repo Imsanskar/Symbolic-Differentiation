@@ -249,7 +249,7 @@ bool parse_expression(Tokenizer *t, ExpressionTree **expr_tree) {
     }
 
     token = t->token;
-    if (accept_token(t, Token_Sin) || accept_token(t, Token_Cos) || accept_token(t, Token_Tan) || accept_token(t, Token_Pow)) {
+    if (accept_token(t, Token_Sin) || accept_token(t, Token_Cos) || accept_token(t, Token_Tan) || accept_token(t, Token_Exp)) {
         ExpressionTree *tree = new ExpressionTree;
         tree->id = token.id;
         tree->type = token.token_type; 
