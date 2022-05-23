@@ -240,11 +240,15 @@ bool parse_function_parameter(Tokenizer *t, ParseStruct *parser) {
     return false;
 }
 
-bool parse_expression(Tokenizer *t, ExpressionTree **expr_tree) { 
+bool parse_expression(Tokenizer *t, ExpressionTree **expr_tree, bool is_function = false) { 
     Token token;
     token = t->token;
     if (accept_token(t, Token_Identifier) || accept_token(t, Token_Number)) {
-        *expr_tree = insert_expr(*expr_tree, token);
+        if (is_function) {
+            *expr_tree = insert_function_parameter(*expr_tree, token);
+        } else {
+            *expr_tree = insert_expr(*expr_tree, token);
+        }
         return true;   
     }
 
@@ -257,25 +261,25 @@ bool parse_expression(Tokenizer *t, ExpressionTree **expr_tree) {
             return false;
         }
 
-        parse_expression(t, &tree);
+        parse_expression(t, &tree, true);
 
-        bool is_remaining_expression = true;
+        bool is_remaining_expression = t->token.token_type != Token_CloseParenthesis;
+        if (!is_remaining_expression) {
+            accept_token(t, Token_CloseParenthesis);
+        }
         while (is_remaining_expression) {
             token = t->token;
             if (accept_token(t, Token_Add) || accept_token(t, Token_Subtract) || accept_token(t, Token_Multiply) || accept_token(t, Token_Divide)) {
-                tree = insert_expr(tree, token);
+                tree = insert_function_parameter(tree, token);
             }
 
-            parse_expression(t, &tree);
+            parse_expression(t, &tree, true);
 
             if (accept_token(t, Token_CloseParenthesis)) {
                 is_remaining_expression = false;
             }
         }
-        print_inorder(*expr_tree);
-        print_inorder(tree);
         *expr_tree = insert_subtree(*expr_tree, tree);
-        print_inorder(*expr_tree);
         return true;
     }
 
@@ -350,7 +354,7 @@ bool parse_function(Tokenizer *t, ParseStruct *parser) {
             statements_remaining = false;;
         }   
     }
-
+    print_inorder(parser->expr_tree);
     return true;
 }
 

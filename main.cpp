@@ -103,8 +103,13 @@ ExpressionTree* calculate_derivative(ExpressionTree *tree, ExpressionTree *deriv
     } else if (type == Token_Cos) {
         derivative_tree->type = Token_Multiply;
         derivative_tree->left = new ExpressionTree;
-        derivative_tree->left->type = Token_Sin;
-        derivative_tree->left->left = tree->left;
+        derivative_tree->left->type = Token_Subtract;
+        derivative_tree->left->left = new ExpressionTree;
+        derivative_tree->left->left->type = Token_Number;
+        derivative_tree->left->left->id = "0";
+        derivative_tree->left->right = new ExpressionTree;
+        derivative_tree->left->right->type = Token_Sin;
+        derivative_tree->left->right->left = tree->left;
 
         derivative_tree->right = calculate_derivative(tree->left, derivative_tree->right, variable);
     } else if (type == Token_Exp) {

@@ -13,6 +13,7 @@ struct ExpressionTree {
 
 ExpressionTree* insert_expr(ExpressionTree *tree, Token token);
 ExpressionTree* insert_subtree(ExpressionTree *tree, ExpressionTree *sub_tree);
+ExpressionTree* insert_function_parameter(ExpressionTree *tree, Token token);
 
 void print_inorder(ExpressionTree *node);
 

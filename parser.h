@@ -45,8 +45,6 @@ bool parse_function_parameter(Tokenizer *t, ParseStruct *parser) ;
 
 bool parse_statement(Tokenizer *t, ParseStruct *parser);
 
-
 bool parse_function(Tokenizer *t, ParseStruct *parser);
-
 
 bool parse_introspection(Tokenizer *t, ParseStruct *parser);

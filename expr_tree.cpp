@@ -97,6 +97,83 @@ std::string_view expressiontree_to_string(ExpressionTree *tree) {
 
 ExpressionTree* insert_expr(ExpressionTree *tree, Token token) {
     if (token.token_type == Token_Identifier) {
+        if(!tree) {
+            tree = new ExpressionTree;
+            tree->left = new ExpressionTree;
+            tree->left->id = token.id;
+            tree->left->type = token.token_type;
+
+            return tree;
+        }else if (tree && !tree->right && tree->left) {
+            tree->right = new ExpressionTree;
+            tree->right->id = token.id;
+            tree->right->type = token.token_type;
+
+            return tree;
+        } else {
+            tree->right = insert_expr(tree->right, token);
+
+            return tree;
+        }
+
+    }
+
+    if (token.token_type == Token_Number) {
+        if(!tree) {
+            tree = new ExpressionTree;
+            tree->left = new ExpressionTree;
+            tree->left->id = token.id;
+            tree->left->type = token.token_type;
+
+            return tree;
+        }else if (tree && !tree->right && tree->left) {
+            tree->right = new ExpressionTree;
+            tree->right->id = token.id;
+            tree->right->type = token.token_type;
+
+            return tree;
+        }
+    }
+
+
+    if (token.token_type != Token_Identifier) {
+        if (tree->type < Token_Identifier && tree->type > Token_Variable) {
+            ExpressionTree *root_node = new ExpressionTree;
+            root_node->left = tree;
+            root_node->id = token.id;
+            root_node->type = token.token_type;
+            return root_node;
+        }
+
+        if (tree->left && !tree->right){
+            tree->type = token.token_type;
+
+            return tree;
+        }
+    
+        if (priority(tree->type) >= priority(token.token_type)) {
+            ExpressionTree *new_tree = new ExpressionTree;
+            new_tree->type = token.token_type;
+            new_tree->left = tree;
+
+            return new_tree;
+        } else {
+            if (priority(token.token_type) < priority(tree->type)) {
+                tree->left = tree;
+                tree->right = NULL;
+            } else {
+                tree->right = insert_expr(tree->right, token);
+            }
+
+            return tree;
+        }
+    }
+
+    return NULL;
+}
+
+ExpressionTree* insert_function_parameter(ExpressionTree *tree, Token token) {
+    if (token.token_type == Token_Identifier) {
         if (tree && tree->type < Token_Identifier && tree->type > Token_Variable) {
             if (tree->left) {
                 tree->left = insert_expr(tree->left, token);
@@ -210,7 +287,10 @@ ExpressionTree* insert_expr(ExpressionTree *tree, Token token) {
 ExpressionTree* insert_subtree(ExpressionTree *tree, ExpressionTree *sub_tree) {
     if (!tree) {
         tree = sub_tree;
-    } else if(tree->left) {
+    } else if(!tree->left) {
+        tree->left = sub_tree;
+    } 
+    else if(tree->left) {
         tree->right = sub_tree;
     } else if(tree->left && tree->right) {
         tree->right = insert_subtree(tree->right, sub_tree);
