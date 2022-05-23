@@ -1,6 +1,6 @@
 CC=g++
 SourceFiles="../main.cpp ../expr_tree.cpp ../parser.cpp"
-CompilerFlags="-g"
+CompilerFlags="-g -fsanitize=address -fsanitize=leak"
 Output="SD"
 
 if [ ! -d "bin" ] 
