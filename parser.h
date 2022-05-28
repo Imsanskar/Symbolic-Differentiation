@@ -30,7 +30,7 @@ inline int is_num(char c);
 
 bool is_equal_case_insensitive(std::string_view s1, const std::string_view s2);
 
-bool is_equal_case_insensitive(const char*  s1, const char* s2, const int size_1, const int size_2);
+bool is_equal_case_insensitive(const char* s1, const char* s2, const int size_1, const int size_2);
 
 Token tokenize(Tokenizer *t);
 //parsers

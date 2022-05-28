@@ -75,15 +75,14 @@ static const char * TokenTypeStrings[] = {
 
 struct Token {
     TokenType token_type;
-    int length; 
     std::string_view id; // contents of the token
     char *text;
 
     bool operator ==(const char* match) {
-        if (strlen(match) != length) {
+        if (strlen(match) != id.length()) {
             return false;
         }
-        for(int i = 0; i < length; i++) {
+        for(int i = 0; i < id.length(); i++) {
             if (id[i] != match[i]) {
                 return false;
             } 
