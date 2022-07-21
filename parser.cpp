@@ -155,7 +155,6 @@ Token tokenize(Tokenizer *t) {
                 }
                 const char *end = t->text;
                 token.id = std::string_view(start, end - start);
-                token.length = end - start;
                 token.token_type = Token_Identifier;
                 const size_t size = ArrayCount(keywords);
                 for(int i = 0; i < size; i++) {
